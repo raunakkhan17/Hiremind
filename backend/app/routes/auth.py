@@ -3,7 +3,13 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import User, Profile, Skill
-from app.schemas import UserRegister, UserLogin, UserResponse, AuthResponse
+from app.schemas import (
+    UserRegister,
+    UserLogin,
+    UserResponse,
+    AuthResponse,
+    ProfileUpdate,
+)
 from app.security import (
     get_password_hash,
     verify_password,
@@ -201,3 +207,56 @@ def get_me(current_user: User = Depends(get_current_user)):
     Requires Bearer token authorization header.
     """
     return current_user
+
+
+@router.put(
+    "/profile",
+    response_model=UserResponse,
+    summary="Update current user's profile & skills",
+)
+@router.put(
+    "/me/profile",
+    response_model=UserResponse,
+    include_in_schema=False,
+)
+def update_profile(
+    payload: ProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Updates the authenticated candidate's experience level, location,
+    work mode preference, and skills list.
+    """
+    profile = current_user.profile
+    if not profile:
+        profile = Profile(user_id=current_user.id)
+        db.add(profile)
+        db.flush()
+
+    if payload.experience_level is not None:
+        profile.experience_level = payload.experience_level
+
+    if payload.location is not None:
+        profile.location = payload.location
+
+    if payload.work_mode is not None:
+        profile.work_mode = payload.work_mode
+
+    if payload.skills is not None:
+        # Delete existing skills for this profile and replace with new set
+        db.query(Skill).filter(Skill.profile_id == profile.id).delete()
+        for skill_name in payload.skills:
+            clean = skill_name.strip()
+            if clean:
+                db.add(Skill(profile_id=profile.id, name=clean))
+
+    db.commit()
+
+    fresh_user = (
+        db.query(User)
+        .options(joinedload(User.profile).joinedload(Profile.skills))
+        .filter(User.id == current_user.id)
+        .first()
+    )
+    return fresh_user

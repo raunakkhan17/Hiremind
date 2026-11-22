@@ -39,6 +39,12 @@ interface AuthContextType {
   }) => Promise<void>
   logout: () => void
   refreshUser: () => Promise<void>
+  updateProfile: (data: {
+    experience_level?: string
+    location?: string
+    work_mode?: string
+    skills?: string[]
+  }) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -104,6 +110,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const updateProfile = async (payload: {
+    experience_level?: string
+    location?: string
+    work_mode?: string
+    skills?: string[]
+  }) => {
+    const updatedUser = await api.auth.updateProfile(payload)
+    setUser(updatedUser)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -115,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         refreshUser,
+        updateProfile,
       }}
     >
       {children}

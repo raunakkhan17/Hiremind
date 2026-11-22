@@ -88,6 +88,17 @@ export const api = {
       }),
 
     getMe: () => request<any>('/me'),
+
+    updateProfile: (payload: {
+      experience_level?: string
+      location?: string
+      work_mode?: string
+      skills?: string[]
+    }) =>
+      request<any>('/profile', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      }),
   },
 
   // Jobs & Catalog

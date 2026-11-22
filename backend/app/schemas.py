@@ -41,6 +41,13 @@ class ProfileCreate(ProfileBase):
     skills: Optional[List[str]] = []
 
 
+class ProfileUpdate(BaseModel):
+    experience_level: Optional[str] = None
+    location: Optional[str] = None
+    work_mode: Optional[str] = None
+    skills: Optional[List[str]] = None
+
+
 class ProfileResponse(ProfileBase):
     id: int
     user_id: int

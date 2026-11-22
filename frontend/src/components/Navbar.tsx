@@ -13,6 +13,7 @@ import {
   LogOut,
   Bookmark,
   ChevronDown,
+  User as UserIcon,
 } from 'lucide-react'
 import { Button, Badge } from './ui'
 import { useAuth } from '../context/AuthContext'
@@ -167,6 +168,22 @@ export const Navbar: React.FC = () => {
 
                     <div className="py-1">
                       <Link
+                        to="/profile"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        <UserIcon className="h-4 w-4 text-indigo-400" />
+                        <span>My Profile</span>
+                      </Link>
+                      <Link
+                        to="/onboarding"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        <Sparkles className="h-4 w-4 text-purple-400" />
+                        <span>Calibration Wizard</span>
+                      </Link>
+                      <Link
                         to="/jobs"
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
@@ -255,6 +272,27 @@ export const Navbar: React.FC = () => {
               <BookOpen className="h-4 w-4 text-slate-400" />
               <span>Swagger API Docs</span>
             </a>
+
+            {isAuthenticated && (
+              <div className="pt-2 border-t border-slate-800/80 space-y-1">
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2.5 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-900"
+                >
+                  <UserIcon className="h-4 w-4 text-indigo-400" />
+                  <span>My Profile</span>
+                </Link>
+                <Link
+                  to="/saved"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2.5 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-900"
+                >
+                  <Bookmark className="h-4 w-4 text-emerald-400" />
+                  <span>Saved Jobs</span>
+                </Link>
+              </div>
+            )}
 
             {!isAuthenticated && (
               <div className="pt-2 flex flex-col gap-2">
