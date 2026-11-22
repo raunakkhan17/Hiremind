@@ -14,6 +14,7 @@ import {
   Bookmark,
   ChevronDown,
   User as UserIcon,
+  LayoutDashboard,
 } from 'lucide-react'
 import { Button, Badge } from './ui'
 import { useAuth } from '../context/AuthContext'
@@ -43,7 +44,8 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: 'Overview', path: '/', icon: Layers },
-    { name: 'Open Positions', path: '/jobs', icon: Briefcase },
+    ...(isAuthenticated ? [{ name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }] : []),
+    { name: 'Search Roles', path: '/search', icon: Briefcase },
   ]
 
   const handleLogout = () => {
@@ -167,6 +169,14 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="py-1">
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        <LayoutDashboard className="h-4 w-4 text-indigo-400" />
+                        <span>Dashboard</span>
+                      </Link>
                       <Link
                         to="/profile"
                         onClick={() => setUserDropdownOpen(false)}

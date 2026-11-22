@@ -1,72 +1,53 @@
 # HireMind
 
-Full-stack hiring intelligence platform featuring **FastAPI**, **SQLite (via SQLAlchemy)**, **JWT Authentication**, **Automated CSV Job Seeding**, **Candidate-Job Match Scoring Engine**, **3-Step Onboarding Wizard**, **Candidate Profile Management**, **React**, **TypeScript**, **Vite**, **Professional SaaS Design System**, **Tailwind CSS**, **React Router**, and **Lucide Icons**.
+Full-stack hiring intelligence platform featuring **FastAPI**, **SQLite (via SQLAlchemy)**, **JWT Authentication**, **Automated CSV Job Seeding**, **Candidate-Job Match Scoring Engine**, **Interactive Dashboard**, **Advanced Search with Filter Sidebar**, **Circular Match-Score Rings**, **3-Step Onboarding Wizard**, **Candidate Profile Management**, **React**, **TypeScript**, **Vite**, **Professional SaaS Design System**, **Tailwind CSS**, **React Router**, and **Lucide Icons**.
 
 ---
 
-## 3-Step Onboarding Wizard (`/onboarding`)
+## Interactive Dashboard (`/dashboard`)
 
-A guided onboarding experience featuring a progress bar (Step 1 of 3: 33% &rarr; 66% &rarr; 100%) to calibrate candidate compatibility:
-
-1. **Step 1: Technical Stack & Skills:**
-   - Interactive tag chips with remove button (`X`).
-   - Custom skill input with Enter key or button submission.
-   - Popular technology suggestions palette (Python, FastAPI, React, Docker, Kubernetes, etc.) to toggle chips with 1 click.
-2. **Step 2: Seniority & Location:**
-   - Visual cards for seniority levels (`Entry`, `Mid`, `Senior`, `Lead / Staff`) with descriptions and target experience ranges.
-   - Primary location input with quick preset pills (`Remote`, `San Francisco, CA`, `New York, NY`, etc.).
-3. **Step 3: Work Mode Preference:**
-   - Arrangement cards: `Remote` (100% remote), `Hybrid` (office + home), and `On-site`.
-   - Explains the 20% preference weighting in the candidate matching engine.
-4. **Completion:**
-   - Persists calibration to the backend via `PUT /profile`.
-   - Fires success toast and redirects candidate to `/jobs` with instant live match scores.
+A candidate command center featuring:
+- **Welcome Header:** Personalized candidate welcome showing calibrated experience level, work mode, and quick calibration actions.
+- **Stat Cards:**
+  - **Saved Positions:** Current count of bookmarked opportunities with 1-click navigation to `/saved`.
+  - **Top Match Score:** Peak compatibility percentage (e.g. `98%`) and associated role title.
+  - **Active Pipeline:** 60 verified technical listings in the SQLite database.
+  - **Calibrated Skills:** Active technical skill chips powering the 60% skill coverage scoring.
+- **"Recommended for you" Section:**
+  - Ranked job listings returned by `api.jobs.getRecommendations()`.
+  - Rendered with rich `JobCard` components (see below).
 
 ---
 
-## Candidate Profile Management (`/profile`)
+## Search Page & Filter Sidebar (`/search` & `/jobs`)
 
-A dedicated protected page for reviewing and modifying candidate preferences at any time:
-- **Candidate Overview:** Initials avatar, verified email, registration status, and shortcut to saved opportunities.
-- **Engine Breakdown Card:** Displays the live weighting of the matching algorithm (60% Skill Coverage + 20% Experience + 20% Work Mode/Location).
-- **Interactive Form:**
-  - Technical skills chip management with live suggestions.
-  - Seniority level selector cards.
-  - Work mode preference cards.
-  - Location input with preset shortcuts.
-- **Save Actions:** Updates backend profile via `api.auth.updateProfile()` with loading indicator and toast feedback.
-
----
-
-## Candidate Match Engine (`backend/app/matcher.py`)
-
-Pure functional scoring formula:
-$$\text{score} = 0.6 \times \text{skill\_coverage} + 0.2 \times \text{experience\_fit} + 0.2 \times \text{preference\_fit}$$
-
-- **`skill_coverage`** ($0.0 - 1.0$): Case-insensitive normalized set matching.
-- **`experience_fit`** ($0.0 - 1.0$): Seniority comparison (`Entry`, `Mid`, `Senior`, `Lead`).
-- **`preference_fit`** ($0.0 - 1.0$): Work mode (`Remote`, `Hybrid`, `On-site`) and location alignment.
-- **Output:** `match_score` ($0-100$), `matched_skills`, `missing_skills`, and explanatory `reasons`.
+A role discovery and filtering experience:
+- **Primary Search Bar:** 250ms debounced full-text search across job titles, company names, technical skills, and descriptions with 1-click clear button.
+- **Filter Sidebar:**
+  - **Work Mode:** Radio selectors for `All`, `Remote`, `Hybrid`, and `On-site`.
+  - **Seniority:** Filter by `Entry`, `Mid`, `Senior`, and `Lead`.
+  - **Location:** City substring matching with popular quick-pick presets.
+  - **Mobile Collapsible Drawer:** Automatically collapses into a drawer on compact viewports with an active filter badge counter.
+- **Pagination & Skeletons:**
+  - Configurable page limits (10, 20, 50 per page).
+  - Shimmer pulse `SkeletonCard` placeholders during data loading.
 
 ---
 
-## API Endpoints
+## Enhanced Job Card (`JobCard.tsx`)
 
-### 1. Candidate Profile & Authentication
-- `POST /auth/register`: Register user with profile and skills
-- `POST /auth/login`: Authenticate and receive JWT token
-- `GET /me`: Get authenticated user profile & skills
-- `PUT /profile`: Update authenticated candidate's skills, experience, location, and work mode
-
-### 2. Job Catalog & Matching
-- `GET /jobs`: Filter and paginate jobs (`q`, `location`, `work_mode`, `experience_level`, `page`, `limit`) with dynamic candidate match scores
-- `GET /jobs/{id}`: Detailed job view
-- `GET /recommendations`: Job listings ranked in descending order of compatibility for the candidate
-
-### 3. Saved Jobs
-- `POST /jobs/{id}/save`: Bookmark a job for the logged-in user
-- `DELETE /jobs/{id}/save`: Remove a bookmarked job
-- `GET /saved`: List all bookmarked jobs for the logged-in user
+Each opportunity card includes:
+1. **Company Initial Avatar:** Dynamic brand gradient icon featuring the company's capitalized initial (e.g. `C` for CloudScale AI).
+2. **Title & Location:** Role title and verified city/remote status.
+3. **Work-Mode Badge:** Color-coded status badge (`Remote`, `Hybrid`, `On-site`).
+4. **Circular Match-Score Ring (`CircularProgress.tsx`):**
+   - Animated SVG radial progress ring with color transitions:
+     - **$\ge 80\%$ Match:** Emerald green ring with pulsing highlight
+     - **$\ge 60\%$ Match:** Indigo blue ring
+     - **$< 60\%$ Match:** Amber warning ring
+   - Centered percentage and "Match" label.
+5. **Bookmark Button:** Single-click save/unsave toggling with `localStorage` and backend persistence.
+6. **Skills Chips:** Highlights matching skills in emerald with checkmarks and displays missing skills.
 
 ---
 
@@ -89,7 +70,8 @@ npm install
 npm run dev
 ```
 
-- **Frontend App:** [http://localhost:5173](http://localhost:5173)
+- **Candidate Dashboard:** [http://localhost:5173/dashboard](http://localhost:5173/dashboard)
+- **Role Search & Filters:** [http://localhost:5173/search](http://localhost:5173/search)
 - **Calibration Wizard:** [http://localhost:5173/onboarding](http://localhost:5173/onboarding)
-- **Profile Management:** [http://localhost:5173/profile](http://localhost:5173/profile)
-- **Saved Roles Queue:** [http://localhost:5173/saved](http://localhost:5173/saved)
+- **Profile Manager:** [http://localhost:5173/profile](http://localhost:5173/profile)
+- **Saved Opportunities:** [http://localhost:5173/saved](http://localhost:5173/saved)

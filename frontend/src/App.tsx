@@ -5,7 +5,8 @@ import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './components/ui/Toast'
 import { Navbar } from './components/Navbar'
 import { HomePage } from './pages/HomePage'
-import { JobsPage } from './pages/JobsPage'
+import { SearchPage } from './pages/SearchPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SavedJobsPage } from './pages/SavedJobsPage'
@@ -25,7 +26,16 @@ const AppContent: React.FC = () => {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/jobs" element={<SearchPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route
