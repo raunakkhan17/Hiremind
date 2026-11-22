@@ -333,6 +333,7 @@ export const SavedJobsPage: React.FC = () => {
                         <select
                           value={currentStatus}
                           disabled={updatingId === item.job_id}
+                          aria-label={`Pipeline status stage for ${job.title}`}
                           onChange={(e) =>
                             handleStatusChange(
                               item.job_id,
@@ -373,6 +374,7 @@ export const SavedJobsPage: React.FC = () => {
                       onClick={() => handleUnsave(job.id, job.title)}
                       className="text-rose-400 border-rose-500/30 hover:bg-rose-950/40 hover:text-rose-300"
                       title="Remove from saved jobs"
+                      aria-label={`Remove ${job.title} from saved jobs`}
                       leftIcon={<Trash2 className="h-4 w-4" />}
                     >
                       Remove

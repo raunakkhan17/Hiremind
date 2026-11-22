@@ -137,6 +137,9 @@ export const Navbar: React.FC = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  aria-label="User account menu"
+                  aria-expanded={userDropdownOpen}
+                  aria-haspopup="true"
                   className="flex items-center space-x-2 rounded-xl border border-slate-800 bg-slate-900/80 p-1.5 pr-3 hover:border-slate-700 transition-colors focus:outline-none"
                 >
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white shadow-sm">
@@ -251,7 +254,8 @@ export const Navbar: React.FC = () => {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden rounded-xl border border-slate-800 bg-slate-900/60 p-2 text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
-              aria-label="Toggle Mobile Navigation"
+              aria-label="Toggle Navigation Menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>

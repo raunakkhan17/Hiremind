@@ -167,6 +167,7 @@ export const JobCard: React.FC<JobCardProps> = ({
                 size="sm"
                 onClick={() => onToggleSave(job.id, job.title)}
                 title={isSaved ? 'Remove from saved' : 'Save for later'}
+                aria-label={isSaved ? `Remove ${job.title} from saved jobs` : `Save ${job.title} for later`}
                 className={isSaved ? 'text-indigo-400 border-indigo-500/40 bg-indigo-500/15' : ''}
               >
                 <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-indigo-400' : ''}`} />

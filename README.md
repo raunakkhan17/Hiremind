@@ -123,3 +123,19 @@ Personal application tracking system:
 - **Status Dropdown:** Update any tracked role's lifecycle state directly on the card with color-coded badges (`Saved`, `Applied`, `Interview`, `Rejected`).
 - **Remove Button:** One-click removal with confirmation toast and immediate list update.
 - **External Apply Button:** Direct link to job application portals.
+
+---
+
+## Landing Page, UX & Accessibility
+
+- **Hero Section (`/`):** High-converting SaaS hero with gradient title, platform value proposition, dynamic call-to-actions ("Explore Live Roles", "Calibrate My Profile", "Ask AI Assistant"), live metric badges (60+ Roles, 3-Factor Match, <100ms Pure Scoring, LLaMA 3.3 Groq Engine), and an interactive glass match preview card.
+- **3 Feature Cards:**
+  1. *Deterministic 3-Factor Scoring*: Mathematical formula breakdown (60% Skill Coverage, 20% Seniority Fit, 20% Preference Fit).
+  2. *Autonomous AI Career Advisor*: Groq LLaMA 3.3 with dual-tool calling (`search_jobs`, `get_skill_gaps`) and JWT token-scoped privacy.
+  3. *Lifecycle Opportunity Tracker*: Pipeline tracking with visual stage indicators (`Saved`, `Applied`, `Interview`, `Decisions`).
+- **Call-to-Action (CTA):** Prominent gradient banner with direct profile calibration button and trust guarantees.
+- **Error Boundary (`ErrorBoundary.tsx`):** Gracefully catches unhandled runtime render exceptions with a friendly recovery interface, reload button, and collapsible diagnostics.
+- **Page Transitions & Animations:** Smooth CSS entrance keyframes (`animate-fade-in`, `animate-slide-up`, `page-enter`), subtle glows, and responsive transitions.
+- **Accessible 404 Page (`NotFoundPage.tsx`):** Visual glow 404 badge, descriptive recovery instructions, and quick destination links (Home, Catalog, Assistant, Dashboard).
+- **Custom SVG Favicon (`/favicon.svg`):** Sleek, brand-aligned vector icon linked in `index.html`.
+- **Accessibility & Mobile Layouts:** Comprehensive keyboard focus rings (`focus-visible:ring-2 focus-visible:ring-indigo-500`), WCAG AA contrast compliance, explicit `aria-label` tags, and fully collapsible mobile filter and navigation drawers.

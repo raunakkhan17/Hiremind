@@ -35,6 +35,25 @@ export default {
         'soft-lg': '0 10px 30px -4px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.06)',
         'glow': '0 0 25px -5px rgba(99, 102, 241, 0.25)',
       },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseGlow: {
+          '0%, 100%': { opacity: '1', boxShadow: '0 0 20px -3px rgba(99, 102, 241, 0.4)' },
+          '50%': { opacity: '0.8', boxShadow: '0 0 10px -3px rgba(99, 102, 241, 0.2)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.25s ease-out forwards',
+        'slide-up': 'slideUp 0.35s ease-out forwards',
+        'pulse-glow': 'pulseGlow 2.5s infinite',
+      },
     },
   },
   plugins: [],

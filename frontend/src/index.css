@@ -7,8 +7,21 @@
     color-scheme: dark;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply m-0 min-h-screen font-sans bg-slate-950 text-slate-100 antialiased;
+    @apply m-0 min-h-screen font-sans bg-slate-950 text-slate-100 antialiased overflow-x-hidden;
+  }
+
+  /* Accessibility focus ring defaults */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-950;
   }
 
   /* Custom subtle scrollbar */
@@ -24,5 +37,11 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-700;
+  }
+}
+
+@layer utilities {
+  .page-enter {
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }

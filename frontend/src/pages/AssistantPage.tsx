@@ -421,6 +421,7 @@ export const AssistantPage: React.FC = () => {
             type="text"
             value={input}
             disabled={loading}
+            aria-label="Ask about jobs, skill gaps, or career fit"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask about jobs, skill gaps, or career fit..."

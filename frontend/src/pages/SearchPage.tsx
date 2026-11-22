@@ -203,6 +203,7 @@ export const SearchPage: React.FC = () => {
           <input
             type="text"
             value={searchQuery}
+            aria-label="Search open roles by title, company, skills, or description"
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search roles by keyword, title, company, or skills (e.g. Python, FastAPI, React, Docker)..."
             className="w-full rounded-xl border border-slate-800 bg-slate-950/80 py-3 pl-12 pr-10 text-sm sm:text-base text-slate-100 placeholder-slate-500 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -210,6 +211,7 @@ export const SearchPage: React.FC = () => {
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
+              aria-label="Clear search input"
               className="absolute right-3.5 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
               <X className="h-4 w-4" />
