@@ -10,6 +10,8 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Target,
+  CheckCircle2,
 } from 'lucide-react'
 
 interface Job {
@@ -22,6 +24,10 @@ interface Job {
   experience_level: string
   skills?: string
   apply_url?: string
+  match_score?: number | null
+  matched_skills?: string[] | null
+  missing_skills?: string[] | null
+  reasons?: string[] | null
 }
 
 interface SavedJob {
@@ -41,6 +47,7 @@ export const JobsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1)
   const [totalJobs, setTotalJobs] = useState<number>(0)
   const [savedJobIds, setSavedJobIds] = useState<Set<number>>(new Set())
+  const [hasProfile, setHasProfile] = useState<boolean>(false)
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -58,6 +65,7 @@ export const JobsPage: React.FC = () => {
       if (response.ok) {
         const savedList: SavedJob[] = await response.json()
         setSavedJobIds(new Set(savedList.map((item) => item.job_id)))
+        setHasProfile(true)
       }
     } catch (err) {
       console.warn('Could not fetch saved jobs', err)
@@ -77,7 +85,11 @@ export const JobsPage: React.FC = () => {
         params.append('page', page.toString())
         params.append('limit', limit.toString())
 
-        const response = await fetch(`${apiUrl}/jobs?${params.toString()}`)
+        const token = localStorage.getItem('hiremind_token')
+        const headers: Record<string, string> = {}
+        if (token) headers['Authorization'] = `Bearer ${token}`
+
+        const response = await fetch(`${apiUrl}/jobs?${params.toString()}`, { headers })
         if (response.ok) {
           const data = await response.json()
           const items: Job[] = Array.isArray(data) ? data : data.items || data.jobs || []
@@ -112,7 +124,7 @@ export const JobsPage: React.FC = () => {
   const toggleSaveJob = async (jobId: number) => {
     const token = localStorage.getItem('hiremind_token')
     if (!token) {
-      alert('Please log in or register to save jobs to your profile.')
+      alert('Please log in or register to bookmark jobs.')
       return
     }
 
@@ -154,6 +166,7 @@ export const JobsPage: React.FC = () => {
           <div className="inline-flex items-center space-x-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-0.5 text-xs font-semibold text-indigo-300 mb-2">
             <Sparkles className="h-3 w-3" />
             <span>SQLite Database &bull; {totalJobs} Available Roles</span>
+            {hasProfile && <span className="text-emerald-400 font-normal">&bull; Match Scoring Active</span>}
           </div>
           <h1 className="text-3xl font-bold text-white">Live Job Pipeline</h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -250,6 +263,8 @@ export const JobsPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-4">
           {jobs.map((job) => {
             const isSaved = savedJobIds.has(job.id)
+            const hasMatch = job.match_score !== undefined && job.match_score !== null
+
             return (
               <div
                 key={job.id}
@@ -264,6 +279,20 @@ export const JobsPage: React.FC = () => {
                     <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-300">
                       {job.experience_level}
                     </span>
+                    {hasMatch && (
+                      <span
+                        className={`inline-flex items-center space-x-1 rounded-full px-2.5 py-0.5 text-xs font-bold border ${
+                          (job.match_score || 0) >= 80
+                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                            : (job.match_score || 0) >= 60
+                            ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                            : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                        }`}
+                      >
+                        <Target className="h-3 w-3" />
+                        <span>{job.match_score}% Match</span>
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
@@ -283,14 +312,35 @@ export const JobsPage: React.FC = () => {
                     </p>
                   )}
 
+                  {/* Skills representation */}
                   {job.skills && (
                     <div className="flex flex-wrap gap-1.5 pt-2">
-                      {job.skills.split(',').map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="rounded bg-slate-800/80 px-2 py-0.5 text-[11px] font-medium text-slate-300 border border-slate-700/50"
-                        >
-                          {skill.trim()}
+                      {job.skills.split(',').map((skill, idx) => {
+                        const cleanSkill = skill.trim().toLowerCase()
+                        const isSkillMatched = job.matched_skills?.includes(cleanSkill)
+                        return (
+                          <span
+                            key={idx}
+                            className={`rounded px-2 py-0.5 text-[11px] font-medium border transition-colors ${
+                              isSkillMatched
+                                ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60'
+                                : 'bg-slate-800/80 text-slate-300 border-slate-700/50'
+                            }`}
+                          >
+                            {isSkillMatched && <CheckCircle2 className="inline h-2.5 w-2.5 mr-1" />}
+                            {skill.trim()}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Reasons snippet if matched */}
+                  {job.reasons && job.reasons.length > 0 && (
+                    <div className="pt-1 text-[11px] text-slate-400 flex flex-wrap gap-2">
+                      {job.reasons.slice(0, 2).map((reason, i) => (
+                        <span key={i} className="text-slate-400">
+                          &bull; {reason}
                         </span>
                       ))}
                     </div>

@@ -53,6 +53,37 @@ def get_current_user(
     return user
 
 
+def get_optional_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """
+    Optional authentication dependency: returns current User if a valid
+    Bearer token is provided; otherwise returns None without raising 401.
+    """
+    if not credentials or not credentials.credentials:
+        return None
+
+    token = credentials.credentials
+    try:
+        payload = decode_access_token(token)
+        user_id_str: str | None = payload.get("sub")
+        if user_id_str is None:
+            return None
+        user_id = int(user_id_str)
+    except (jwt.PyJWTError, ValueError):
+        return None
+
+    user = (
+        db.query(User)
+        .options(joinedload(User.profile).joinedload(Profile.skills))
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    return user
+
+
 @router.post(
     "/auth/register",
     response_model=AuthResponse,

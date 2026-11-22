@@ -10,12 +10,37 @@ from app.schemas import (
     SavedJobResponse,
     UnsaveResponse,
 )
-from app.routes.auth import get_current_user
+from app.routes.auth import get_current_user, get_optional_current_user
+from app.matcher import calculate_match
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
 
-@router.get("", response_model=PaginatedJobsResponse, summary="List and filter jobs with pagination")
+def _job_to_response(job: Job, user_profile: Optional[object] = None) -> JobResponse:
+    """Helper to convert a Job model instance into JobResponse, computing match if profile is provided."""
+    match_info = None
+    if user_profile:
+        match_info = calculate_match(user_profile, job)
+
+    return JobResponse(
+        id=job.id,
+        title=job.title,
+        company=job.company,
+        description=job.description,
+        location=job.location,
+        work_mode=job.work_mode,
+        experience_level=job.experience_level,
+        skills=job.skills,
+        apply_url=job.apply_url,
+        created_at=job.created_at,
+        match_score=match_info["match_score"] if match_info else None,
+        matched_skills=match_info["matched_skills"] if match_info else None,
+        missing_skills=match_info["missing_skills"] if match_info else None,
+        reasons=match_info["reasons"] if match_info else None,
+    )
+
+
+@router.get("", response_model=PaginatedJobsResponse, summary="List and filter jobs with pagination & candidate matching")
 def list_jobs(
     response: Response,
     q: Optional[str] = Query(None, description="Search term for title, company, description, or skills"),
@@ -24,11 +49,13 @@ def list_jobs(
     experience_level: Optional[str] = Query(None, description="Filter by level: Entry, Mid, Senior, Lead"),
     page: int = Query(1, ge=1, description="Page number (1-based index)"),
     limit: int = Query(10, ge=1, le=100, description="Items per page"),
+    optional_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Retrieves job postings with keyword search (q), location, work_mode,
     experience_level, and page/limit pagination.
+    Includes candidate match score when authenticated user has a profile.
     """
     query = db.query(Job)
 
@@ -56,7 +83,13 @@ def list_jobs(
     total_pages = (total + limit - 1) // limit if total > 0 else 1
     offset = (page - 1) * limit
 
-    items = query.order_by(Job.id.asc()).offset(offset).limit(limit).all()
+    jobs_data = query.order_by(Job.id.asc()).offset(offset).limit(limit).all()
+
+    # Determine user profile if available
+    profile = optional_user.profile if (optional_user and optional_user.profile) else None
+
+    # Transform jobs to JobResponse, augmenting with match score if profile exists
+    items = [_job_to_response(job, profile) for job in jobs_data]
 
     # Provide pagination metadata in standard headers
     response.headers["X-Total-Count"] = str(total)
@@ -90,15 +123,21 @@ def list_saved_jobs_in_jobs_router(
 
 
 @router.get("/{id}", response_model=JobResponse, summary="Get single job by ID")
-def get_job(id: int, db: Session = Depends(get_db)):
-    """Fetches details for a specific job posting."""
+def get_job(
+    id: int,
+    optional_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    """Fetches details for a specific job posting, including match score if user is logged in."""
     job = db.query(Job).filter(Job.id == id).first()
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job with ID {id} not found",
         )
-    return job
+
+    profile = optional_user.profile if (optional_user and optional_user.profile) else None
+    return _job_to_response(job, profile)
 
 
 @router.post("/{id}/save", response_model=SavedJobResponse, summary="Save a job for the logged-in user")

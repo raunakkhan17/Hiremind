@@ -7,6 +7,7 @@ from app.routes.health import router as health_router
 from app.routes.auth import router as auth_router
 from app.routes.jobs import router as jobs_router
 from app.routes.saved import router as saved_router
+from app.routes.recommendations import router as recommendations_router
 from app.seed import seed_jobs
 
 # Import models so Base.metadata knows about all entities
@@ -27,7 +28,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Backend API for HireMind talent intelligence platform with JWT Authentication & Saved Jobs",
+    description="Backend API for HireMind talent intelligence platform with Candidate Matching & Recommendations",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -44,6 +45,7 @@ app.add_middleware(
 # Register routers
 app.include_router(health_router)
 app.include_router(auth_router)
+app.include_router(recommendations_router)
 app.include_router(jobs_router)
 app.include_router(saved_router)
 
@@ -60,10 +62,11 @@ def root():
             "me": "GET /me",
         },
         "job_endpoints": {
-            "list": "GET /jobs (q, location, work_mode, experience_level, page, limit)",
+            "list": "GET /jobs (q, location, work_mode, experience_level, page, limit) [includes match_score when authenticated]",
             "get_by_id": "GET /jobs/{id}",
             "save_job": "POST /jobs/{id}/save",
             "unsave_job": "DELETE /jobs/{id}/save",
             "saved_jobs": "GET /saved",
+            "recommendations": "GET /recommendations",
         },
     }

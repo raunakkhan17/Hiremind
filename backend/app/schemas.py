@@ -103,6 +103,12 @@ class JobResponse(JobBase):
     id: int
     created_at: Optional[datetime] = None
 
+    # Match attributes (computed dynamically when candidate profile is available)
+    match_score: Optional[float] = None
+    matched_skills: Optional[List[str]] = None
+    missing_skills: Optional[List[str]] = None
+    reasons: Optional[List[str]] = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
