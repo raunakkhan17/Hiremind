@@ -401,5 +401,5 @@ Covered:
 
 ## Author
 
-**Your Name**: B.E. Computer Science and Engineering (3rd year)
+RAUNAK KHAN : B.TECH. Computer Science and Engineering (3rd year)
 · LinkedIn: www.linkedin.com/in/raunakkhan
