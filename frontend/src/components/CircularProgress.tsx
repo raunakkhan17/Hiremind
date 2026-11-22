@@ -38,6 +38,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   }
 
   const { stroke, text, bg } = getColor(clampedScore)
+  const isLarge = size >= 75
 
   return (
     <div
@@ -77,10 +78,10 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
       </svg>
       {/* Centered Percentage */}
       <div className="absolute flex flex-col items-center justify-center text-center">
-        <span className={`text-[11px] font-black tracking-tighter ${text}`}>
+        <span className={`${isLarge ? 'text-xl' : 'text-[11px]'} font-black tracking-tighter ${text}`}>
           {Math.round(clampedScore)}%
         </span>
-        <span className="text-[7px] font-semibold uppercase tracking-wider text-slate-400 -mt-0.5">
+        <span className={`${isLarge ? 'text-[10px]' : 'text-[7px]'} font-semibold uppercase tracking-wider text-slate-400 -mt-0.5`}>
           Match
         </span>
       </div>

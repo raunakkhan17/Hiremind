@@ -8,6 +8,7 @@ from app.schemas import (
     JobResponse,
     PaginatedJobsResponse,
     SavedJobResponse,
+    SavedJobStatusUpdate,
     UnsaveResponse,
 )
 from app.routes.auth import get_current_user, get_optional_current_user
@@ -166,7 +167,7 @@ def save_job(
     if existing:
         return existing
 
-    new_saved = SavedJob(user_id=current_user.id, job_id=id)
+    new_saved = SavedJob(user_id=current_user.id, job_id=id, status="Saved")
     db.add(new_saved)
     db.commit()
 
@@ -176,6 +177,44 @@ def save_job(
         .filter(SavedJob.id == new_saved.id)
         .first()
     )
+    return saved
+
+
+@router.patch("/{id}/status", response_model=SavedJobResponse, summary="Update status of a saved job")
+def update_saved_job_status(
+    id: int,
+    payload: SavedJobStatusUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Updates the candidate application status for a saved job.
+    Options: 'Saved', 'Applied', 'Interview', 'Rejected'.
+    """
+    valid_statuses = {"Saved", "Applied", "Interview", "Rejected"}
+    matched_status = None
+    for s in valid_statuses:
+        if s.lower() == payload.status.strip().lower():
+            matched_status = s
+            break
+    if not matched_status:
+        matched_status = payload.status.strip()
+
+    saved = (
+        db.query(SavedJob)
+        .options(joinedload(SavedJob.job))
+        .filter(SavedJob.user_id == current_user.id, SavedJob.job_id == id)
+        .first()
+    )
+    if not saved:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Saved job with ID {id} not found for this user",
+        )
+
+    saved.status = matched_status
+    db.commit()
+    db.refresh(saved)
     return saved
 
 

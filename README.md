@@ -72,6 +72,36 @@ npm run dev
 
 - **Candidate Dashboard:** [http://localhost:5173/dashboard](http://localhost:5173/dashboard)
 - **Role Search & Filters:** [http://localhost:5173/search](http://localhost:5173/search)
+- **Job Details View:** [http://localhost:5173/jobs/1](http://localhost:5173/jobs/1)
 - **Calibration Wizard:** [http://localhost:5173/onboarding](http://localhost:5173/onboarding)
 - **Profile Manager:** [http://localhost:5173/profile](http://localhost:5173/profile)
-- **Saved Opportunities:** [http://localhost:5173/saved](http://localhost:5173/saved)
+- **Saved Pipeline & Application Tracker:** [http://localhost:5173/saved](http://localhost:5173/saved)
+
+---
+
+## Job Details Page (`/jobs/:id`)
+
+Two-column layout designed for deep candidate evaluation:
+- **Main Column:**
+  - Company branding avatar, role title, seniority badge, work arrangement badge, and posting date.
+  - Action bar with prominent **"Apply Now"** button (pointing to external URL), single-click **Bookmark** toggle, and **Share link** button with clipboard feedback.
+  - Complete formatted job description.
+  - Required technologies & competencies with matching indicator chips.
+- **Side Column (Match Breakdown):**
+  - **Large Circular Match Ring (`CircularProgress`):** Prominently displays the total compatibility score calculated by the scoring formula:
+    `score = 0.6 * skill_coverage + 0.2 * experience_fit + 0.2 * preference_fit`
+  - **Score Formula Breakdown:** Quick metrics for Skills (60%), Experience (20%), and Work Mode (20%).
+  - **Matched Skills:** Green chips (`bg-emerald-950/70 text-emerald-300 border-emerald-500/50`) with checkmark icons.
+  - **Missing Skills / Skills to Acquire:** Red/amber chips (`bg-rose-950/60 text-rose-300 border-rose-500/40`) identifying skill gaps.
+  - **Scoring Rationale:** Bulleted list of reasons explaining exactly why the candidate matches or where gaps exist.
+  - Role snapshot card with location, work arrangement, and recruiting pipeline status.
+
+---
+
+## Saved Jobs & Application Pipeline (`/saved`)
+
+Personal application tracking system:
+- **Pipeline Stage Filter Tabs:** Filter jobs by `All`, `Saved`, `Applied`, `Interview`, and `Rejected` with live count badges.
+- **Status Dropdown:** Update any tracked role's lifecycle state directly on the card with color-coded badges (`Saved`, `Applied`, `Interview`, `Rejected`).
+- **Remove Button:** One-click removal with confirmation toast and immediate list update.
+- **External Apply Button:** Direct link to job application portals.

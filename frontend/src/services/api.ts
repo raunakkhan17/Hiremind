@@ -135,7 +135,16 @@ export const api = {
         method: 'DELETE',
       }),
 
-    getSaved: () => request<any[]>('/saved'),
+    updateSavedStatus: (id: number, status: string) =>
+      request<any>(`/jobs/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+
+    getSaved: (status?: string) => {
+      const qs = status && status !== 'All' ? `?status=${encodeURIComponent(status)}` : ''
+      return request<any[]>(`/saved${qs}`)
+    },
 
     getRecommendations: (params: { limit?: number; min_score?: number } = {}) => {
       const searchParams = new URLSearchParams()

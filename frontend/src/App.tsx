@@ -10,6 +10,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SavedJobsPage } from './pages/SavedJobsPage'
+import { JobDetailsPage } from './pages/JobDetailsPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -28,6 +29,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/jobs" element={<SearchPage />} />
+          <Route path="/jobs/:id" element={<JobDetailsPage />} />
           <Route
             path="/dashboard"
             element={

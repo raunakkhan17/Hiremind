@@ -110,6 +110,7 @@ class SavedJob(Base):
         ForeignKey("jobs.id", ondelete="CASCADE"),
         nullable=False,
     )
+    status = Column(String(50), default="Saved", nullable=False)  # "Saved", "Applied", "Interview", "Rejected"
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (

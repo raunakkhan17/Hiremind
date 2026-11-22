@@ -20,6 +20,14 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     # Startup: ensure SQLite tables exist
     Base.metadata.create_all(bind=engine)
+    # Safe SQLite column migration for status in saved_jobs if table already exists
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE saved_jobs ADD COLUMN status VARCHAR(50) DEFAULT 'Saved'"))
+            conn.commit()
+    except Exception:
+        pass
     # Automatically seed job listings from CSV without duplicates
     seed_jobs()
     yield

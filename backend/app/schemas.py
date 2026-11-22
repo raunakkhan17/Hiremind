@@ -131,10 +131,15 @@ class PaginatedJobsResponse(BaseModel):
 
 
 # --- SavedJob Schemas ---
+class SavedJobStatusUpdate(BaseModel):
+    status: str
+
+
 class SavedJobResponse(BaseModel):
     id: int
     user_id: int
     job_id: int
+    status: str = "Saved"
     created_at: Optional[datetime] = None
     job: Optional[JobResponse] = None
 

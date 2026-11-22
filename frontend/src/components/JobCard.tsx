@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { MapPin, Building, Bookmark, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { Card, Badge, Button } from './ui'
 import { CircularProgress } from './CircularProgress'
@@ -77,7 +78,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           <div className="space-y-1.5 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base sm:text-lg font-bold text-white tracking-tight hover:text-indigo-300 transition-colors">
-                {job.title}
+                <Link to={`/jobs/${job.id}`}>{job.title}</Link>
               </h3>
               <Badge variant={workModeBadgeVariant(job.work_mode)} size="sm">
                 {job.work_mode}
@@ -152,8 +153,14 @@ export const JobCard: React.FC<JobCardProps> = ({
           {/* Circular Match-Score Ring */}
           <CircularProgress score={job.match_score} size={54} />
 
-          {/* Action buttons (Bookmark & Apply) */}
+          {/* Action buttons (Details, Bookmark & Apply) */}
           <div className="flex items-center space-x-2">
+            <Link to={`/jobs/${job.id}`}>
+              <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white">
+                Details
+              </Button>
+            </Link>
+
             {onToggleSave && (
               <Button
                 variant={isSaved ? 'secondary' : 'outline'}
