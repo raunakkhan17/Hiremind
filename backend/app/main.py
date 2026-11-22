@@ -8,6 +8,7 @@ from app.routes.auth import router as auth_router
 from app.routes.jobs import router as jobs_router
 from app.routes.saved import router as saved_router
 from app.routes.recommendations import router as recommendations_router
+from app.routes.assistant import router as assistant_router
 from app.seed import seed_jobs
 
 # Import models so Base.metadata knows about all entities
@@ -56,6 +57,7 @@ app.include_router(auth_router)
 app.include_router(recommendations_router)
 app.include_router(jobs_router)
 app.include_router(saved_router)
+app.include_router(assistant_router)
 
 
 @app.get("/", summary="Root Endpoint")

@@ -71,11 +71,29 @@ npm run dev
 ```
 
 - **Candidate Dashboard:** [http://localhost:5173/dashboard](http://localhost:5173/dashboard)
+- **AI Career Assistant:** [http://localhost:5173/assistant](http://localhost:5173/assistant)
 - **Role Search & Filters:** [http://localhost:5173/search](http://localhost:5173/search)
 - **Job Details View:** [http://localhost:5173/jobs/1](http://localhost:5173/jobs/1)
 - **Calibration Wizard:** [http://localhost:5173/onboarding](http://localhost:5173/onboarding)
 - **Profile Manager:** [http://localhost:5173/profile](http://localhost:5173/profile)
 - **Saved Pipeline & Application Tracker:** [http://localhost:5173/saved](http://localhost:5173/saved)
+
+---
+
+## AI Career Assistant (`POST /assistant/chat` & `/assistant`)
+
+Interactive conversational career advisor powered by the **Groq API** (`llama-3.3-70b-versatile`):
+- **Autonomous Tool Calling (Strictly 2 Backend Tools):**
+  1. `search_jobs`: Queries SQLite database by keywords, location, work mode, and experience tier; dynamically calculates compatibility scores against the authenticated user's profile.
+  2. `get_skill_gaps`: Analyzes skill alignment for a given `job_id`, returning matched skills, missing skills, and scoring reasons.
+- **Security & Scoping:** The candidate identity is extracted directly from the session JWT token (`current_user`), **never** from LLM parameters.
+- **Safety & Rate Limit Guards:** Enforces a maximum of **3 tool calls per turn**.
+- **Friendly Fallback:** Gracefully recovers if the Groq API key is unconfigured, rate-limited, or encounters network failure, providing intelligent offline keyword matching and guidance without failing.
+- **Frontend Chat Interface:**
+  - **Message Bubbles:** Tailored user bubbles (indigo) and assistant responses (slate-900) with timestamp and tool-call indicators.
+  - **Typing Indicator:** Animated 3-dot pulse with status indicator while the model queries backend tools.
+  - **Clickable Job Cards:** Any jobs referenced during tool execution render as interactive cards inside replies with company avatars, work-mode badges, circular match rings, direct `/jobs/:id` links, and external apply buttons.
+  - **Starter Prompts:** Quick suggestion chips for instant exploration.
 
 ---
 

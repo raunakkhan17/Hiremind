@@ -46,6 +46,7 @@ export const Navbar: React.FC = () => {
     { name: 'Overview', path: '/', icon: Layers },
     ...(isAuthenticated ? [{ name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }] : []),
     { name: 'Search Roles', path: '/search', icon: Briefcase },
+    ...(isAuthenticated ? [{ name: 'AI Assistant', path: '/assistant', icon: Sparkles }] : []),
   ]
 
   const handleLogout = () => {
@@ -176,6 +177,14 @@ export const Navbar: React.FC = () => {
                       >
                         <LayoutDashboard className="h-4 w-4 text-indigo-400" />
                         <span>Dashboard</span>
+                      </Link>
+                      <Link
+                        to="/assistant"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center space-x-2 rounded-xl px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        <Sparkles className="h-4 w-4 text-indigo-400" />
+                        <span>AI Assistant</span>
                       </Link>
                       <Link
                         to="/profile"

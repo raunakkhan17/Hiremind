@@ -150,3 +150,23 @@ class UnsaveResponse(BaseModel):
     message: str
     job_id: int
     saved: bool = False
+
+
+# --- AI Assistant / Chat Schemas ---
+class ChatMessage(BaseModel):
+    role: str  # "user", "assistant", "system", "tool"
+    content: Optional[str] = None
+    name: Optional[str] = None
+    tool_calls: Optional[List[dict]] = None
+    tool_call_id: Optional[str] = None
+
+
+class ChatRequest(BaseModel):
+    message: Optional[str] = None
+    messages: Optional[List[ChatMessage]] = None
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    jobs: List[JobResponse] = []
+    tool_calls_count: int = 0

@@ -155,6 +155,18 @@ export const api = {
     },
   },
 
+  // AI Career Assistant
+  assistant: {
+    chat: (payload: {
+      message?: string
+      messages?: Array<{ role: string; content?: string }>
+    }) =>
+      request<{ reply: string; jobs: any[]; tool_calls_count: number }>('/assistant/chat', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  },
+
   // Health
   health: {
     check: () => request<any>('/health'),
