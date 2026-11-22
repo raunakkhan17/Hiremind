@@ -399,23 +399,7 @@ Covered:
 
 ---
 
-## Contributing
-
-1. Fork the repo
-2. Create a branch: `git checkout -b feature/your-feature`
-3. Commit: `git commit -m "Add your feature"`
-4. Push: `git push origin feature/your-feature`
-5. Open a pull request
-
----
-
-## License
-
-MIT License. Add a `LICENSE` file to the repo root.
-
----
-
 ## Author
 
 **Your Name**: B.E. Computer Science and Engineering (3rd year)
-GitHub: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME) · LinkedIn: add your link
+· LinkedIn: www.linkedin.com/in/raunakkhan
