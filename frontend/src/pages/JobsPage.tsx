@@ -5,14 +5,24 @@ import {
   Building,
   Search,
   ExternalLink,
-  Filter,
   Sparkles,
   Bookmark,
   ChevronLeft,
   ChevronRight,
   Target,
   CheckCircle2,
+  RefreshCw,
 } from 'lucide-react'
+import {
+  Button,
+  Input,
+  Card,
+  Badge,
+  SkeletonCard,
+  EmptyState,
+} from '../components/ui'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../components/ui/Toast'
 
 interface Job {
   id: number
@@ -47,13 +57,13 @@ export const JobsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1)
   const [totalJobs, setTotalJobs] = useState<number>(0)
   const [savedJobIds, setSavedJobIds] = useState<Set<number>>(new Set())
-  const [hasProfile, setHasProfile] = useState<boolean>(false)
 
+  const { isAuthenticated, token } = useAuth()
+  const toast = useToast()
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-  // Fetch Saved Jobs for logged in user (if token exists)
+  // Fetch Saved Jobs for logged in user
   const fetchSavedJobs = async () => {
-    const token = localStorage.getItem('hiremind_token')
     if (!token) return
 
     try {
@@ -65,7 +75,6 @@ export const JobsPage: React.FC = () => {
       if (response.ok) {
         const savedList: SavedJob[] = await response.json()
         setSavedJobIds(new Set(savedList.map((item) => item.job_id)))
-        setHasProfile(true)
       }
     } catch (err) {
       console.warn('Could not fetch saved jobs', err)
@@ -85,7 +94,6 @@ export const JobsPage: React.FC = () => {
         params.append('page', page.toString())
         params.append('limit', limit.toString())
 
-        const token = localStorage.getItem('hiremind_token')
         const headers: Record<string, string> = {}
         if (token) headers['Authorization'] = `Bearer ${token}`
 
@@ -114,17 +122,20 @@ export const JobsPage: React.FC = () => {
     }, 200)
 
     return () => clearTimeout(timer)
-  }, [search, locationFilter, workModeFilter, levelFilter, page, limit, apiUrl])
+  }, [search, locationFilter, workModeFilter, levelFilter, page, limit, token, apiUrl])
 
   useEffect(() => {
-    fetchSavedJobs()
-  }, [])
+    if (isAuthenticated) {
+      fetchSavedJobs()
+    } else {
+      setSavedJobIds(new Set())
+    }
+  }, [isAuthenticated, token])
 
   // Handle Save / Unsave toggle
-  const toggleSaveJob = async (jobId: number) => {
-    const token = localStorage.getItem('hiremind_token')
+  const toggleSaveJob = async (jobId: number, jobTitle: string) => {
     if (!token) {
-      alert('Please log in or register to bookmark jobs.')
+      toast.warning('Please sign in or register to bookmark jobs.', 'Authentication Required')
       return
     }
 
@@ -144,121 +155,138 @@ export const JobsPage: React.FC = () => {
           const next = new Set(prev)
           if (isCurrentlySaved) {
             next.delete(jobId)
+            toast.info(`Removed "${jobTitle}" from bookmarks`, 'Bookmark Removed')
           } else {
             next.add(jobId)
+            toast.success(`Saved "${jobTitle}" to your profile!`, 'Job Bookmarked')
           }
           return next
         })
       } else {
         const errData = await response.json()
-        alert(errData.detail || 'Could not update saved job.')
+        toast.error(errData.detail || 'Could not update saved job.', 'Error')
       }
     } catch (err) {
-      alert('Error updating saved job. Ensure backend is running.')
+      toast.error('Network error. Check backend connection.', 'Error')
     }
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center space-x-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-0.5 text-xs font-semibold text-indigo-300 mb-2">
-            <Sparkles className="h-3 w-3" />
-            <span>SQLite Database &bull; {totalJobs} Available Roles</span>
-            {hasProfile && <span className="text-emerald-400 font-normal">&bull; Match Scoring Active</span>}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <Badge variant="default" size="sm">
+              <Sparkles className="h-3 w-3 mr-1 text-indigo-400" />
+              <span>{totalJobs} Live Roles</span>
+            </Badge>
+            {isAuthenticated ? (
+              <Badge variant="success" size="sm" dot>
+                AI Match Scoring Active
+              </Badge>
+            ) : (
+              <Badge variant="neutral" size="sm">
+                Sign in to view personalized match scores
+              </Badge>
+            )}
           </div>
-          <h1 className="text-3xl font-bold text-white">Live Job Pipeline</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            Talent & Job Pipeline
+          </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Search roles with parameters: <code className="text-indigo-300">q</code>,{' '}
-            <code className="text-indigo-300">location</code>,{' '}
-            <code className="text-indigo-300">work_mode</code>,{' '}
-            <code className="text-indigo-300">experience_level</code>,{' '}
-            <code className="text-indigo-300">page</code>, and{' '}
-            <code className="text-indigo-300">limit</code>
+            Browse and filter verified opportunities across Python, React, Data, DevOps, and ML/AI
           </p>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-lg flex flex-col md:flex-row gap-3">
-        {/* Keyword Search 'q' */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
-            }}
-            placeholder="Search query (q): title, company, skills, keywords..."
-            className="w-full rounded-xl border border-slate-700/80 bg-slate-950 py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-        </div>
-
-        {/* Location filter */}
-        <div className="relative w-full md:w-48">
-          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-          <input
-            type="text"
-            value={locationFilter}
-            onChange={(e) => {
-              setLocationFilter(e.target.value)
-              setPage(1)
-            }}
-            placeholder="Location filter..."
-            className="w-full rounded-xl border border-slate-700/80 bg-slate-950 py-2.5 pl-10 pr-3 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-        </div>
-
-        {/* Dropdowns */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center space-x-1 text-xs text-slate-400">
-            <Filter className="h-3.5 w-3.5" />
+      {/* Filter and Search Bar Card */}
+      <Card className="p-4 sm:p-5">
+        <div className="flex flex-col md:flex-row gap-3">
+          {/* Keyword Search 'q' */}
+          <div className="flex-1">
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+              placeholder="Search by keywords, title, skills (e.g. Python, FastAPI, React)..."
+              leftIcon={<Search className="h-4 w-4" />}
+            />
           </div>
-          <select
-            value={workModeFilter}
-            onChange={(e) => {
-              setWorkModeFilter(e.target.value)
-              setPage(1)
-            }}
-            className="rounded-xl border border-slate-700/80 bg-slate-950 px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
-          >
-            <option value="All">All Modes</option>
-            <option value="Remote">Remote</option>
-            <option value="Hybrid">Hybrid</option>
-            <option value="On-site">On-site</option>
-          </select>
 
-          <select
-            value={levelFilter}
-            onChange={(e) => {
-              setLevelFilter(e.target.value)
-              setPage(1)
-            }}
-            className="rounded-xl border border-slate-700/80 bg-slate-950 px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
-          >
-            <option value="All">All Levels</option>
-            <option value="Entry">Entry</option>
-            <option value="Mid">Mid</option>
-            <option value="Senior">Senior</option>
-            <option value="Lead">Lead</option>
-          </select>
+          {/* Location filter */}
+          <div className="w-full md:w-52">
+            <Input
+              value={locationFilter}
+              onChange={(e) => {
+                setLocationFilter(e.target.value)
+                setPage(1)
+              }}
+              placeholder="Location..."
+              leftIcon={<MapPin className="h-4 w-4" />}
+            />
+          </div>
+
+          {/* Dropdown Filters */}
+          <div className="flex items-center gap-2">
+            <select
+              value={workModeFilter}
+              onChange={(e) => {
+                setWorkModeFilter(e.target.value)
+                setPage(1)
+              }}
+              className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none h-10"
+            >
+              <option value="All">All Modes</option>
+              <option value="Remote">Remote</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="On-site">On-site</option>
+            </select>
+
+            <select
+              value={levelFilter}
+              onChange={(e) => {
+                setLevelFilter(e.target.value)
+                setPage(1)
+              }}
+              className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2.5 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none h-10"
+            >
+              <option value="All">All Seniorities</option>
+              <option value="Entry">Entry</option>
+              <option value="Mid">Mid</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+            </select>
+          </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Jobs Grid */}
+      {/* Jobs Listing */}
       {loading ? (
-        <div className="text-center py-12 text-slate-400 text-sm">
-          Loading jobs from SQLite backend...
+        <div className="space-y-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
       ) : jobs.length === 0 ? (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-400">
-          <Briefcase className="mx-auto h-8 w-8 text-slate-600 mb-3" />
-          <p className="font-medium text-white">No jobs matched your query</p>
-          <p className="text-xs text-slate-500 mt-1">Try adjusting search query or clearing filters.</p>
-        </div>
+        <EmptyState
+          icon={Briefcase}
+          title="No jobs matched your query"
+          description="Try broadening your keywords, removing location constraints, or resetting work mode filters."
+          action={{
+            label: 'Clear Filters',
+            onClick: () => {
+              setSearch('')
+              setLocationFilter('')
+              setWorkModeFilter('All')
+              setLevelFilter('All')
+              setPage(1)
+            },
+            icon: RefreshCw,
+          }}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {jobs.map((job) => {
@@ -266,53 +294,56 @@ export const JobsPage: React.FC = () => {
             const hasMatch = job.match_score !== undefined && job.match_score !== null
 
             return (
-              <div
+              <Card
                 key={job.id}
-                className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-6 hover:border-slate-700 hover:bg-slate-900/80 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                hoverable
+                className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6"
               >
-                <div className="space-y-2 flex-1">
+                <div className="space-y-3 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-semibold text-white">{job.title}</h2>
-                    <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-400 border border-indigo-500/20">
+                    <h2 className="text-lg font-bold text-white tracking-tight">{job.title}</h2>
+                    <Badge variant="default" size="sm">
                       {job.work_mode}
-                    </span>
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-300">
+                    </Badge>
+                    <Badge variant="neutral" size="sm">
                       {job.experience_level}
-                    </span>
+                    </Badge>
+
                     {hasMatch && (
-                      <span
-                        className={`inline-flex items-center space-x-1 rounded-full px-2.5 py-0.5 text-xs font-bold border ${
+                      <Badge
+                        variant={
                           (job.match_score || 0) >= 80
-                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                            ? 'success'
                             : (job.match_score || 0) >= 60
-                            ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
-                            : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                        }`}
+                            ? 'default'
+                            : 'warning'
+                        }
+                        size="sm"
                       >
-                        <Target className="h-3 w-3" />
+                        <Target className="h-3 w-3 mr-1" />
                         <span>{job.match_score}% Match</span>
-                      </span>
+                      </Badge>
                     )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
-                    <span className="flex items-center space-x-1 font-medium text-slate-300">
-                      <Building className="h-3.5 w-3.5 text-slate-500" />
+                    <span className="flex items-center space-x-1.5 font-semibold text-slate-200">
+                      <Building className="h-3.5 w-3.5 text-slate-400" />
                       <span>{job.company}</span>
                     </span>
-                    <span className="flex items-center space-x-1">
+                    <span className="flex items-center space-x-1.5">
                       <MapPin className="h-3.5 w-3.5 text-slate-500" />
                       <span>{job.location}</span>
                     </span>
                   </div>
 
                   {job.description && (
-                    <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed pt-1">
+                    <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed pt-1">
                       {job.description}
                     </p>
                   )}
 
-                  {/* Skills representation */}
+                  {/* Skills representation with highlighted matched tags */}
                   {job.skills && (
                     <div className="flex flex-wrap gap-1.5 pt-2">
                       {job.skills.split(',').map((skill, idx) => {
@@ -321,13 +352,13 @@ export const JobsPage: React.FC = () => {
                         return (
                           <span
                             key={idx}
-                            className={`rounded px-2 py-0.5 text-[11px] font-medium border transition-colors ${
+                            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
                               isSkillMatched
-                                ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60'
-                                : 'bg-slate-800/80 text-slate-300 border-slate-700/50'
+                                ? 'bg-emerald-950/60 text-emerald-300 border-emerald-600/60 shadow-sm'
+                                : 'bg-slate-800/80 text-slate-300 border-slate-700/60'
                             }`}
                           >
-                            {isSkillMatched && <CheckCircle2 className="inline h-2.5 w-2.5 mr-1" />}
+                            {isSkillMatched && <CheckCircle2 className="inline h-3 w-3 mr-1 text-emerald-400" />}
                             {skill.trim()}
                           </span>
                         )
@@ -335,44 +366,39 @@ export const JobsPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Reasons snippet if matched */}
+                  {/* Reasons breakdown */}
                   {job.reasons && job.reasons.length > 0 && (
-                    <div className="pt-1 text-[11px] text-slate-400 flex flex-wrap gap-2">
+                    <div className="pt-2 text-[11px] text-slate-400 flex flex-wrap gap-3">
                       {job.reasons.slice(0, 2).map((reason, i) => (
-                        <span key={i} className="text-slate-400">
-                          &bull; {reason}
+                        <span key={i} className="flex items-center space-x-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 mr-1" />
+                          <span>{reason}</span>
                         </span>
                       ))}
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center space-x-2 flex-shrink-0">
-                  <button
-                    onClick={() => toggleSaveJob(job.id)}
-                    title={isSaved ? 'Unsave job' : 'Save job for later'}
-                    className={`inline-flex items-center justify-center h-9 w-9 rounded-xl border transition-colors ${
-                      isSaved
-                        ? 'border-indigo-500 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30'
-                        : 'border-slate-700 bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
-                    }`}
+                <div className="flex items-center space-x-3 flex-shrink-0 self-start md:self-center">
+                  <Button
+                    variant={isSaved ? 'secondary' : 'outline'}
+                    size="sm"
+                    onClick={() => toggleSaveJob(job.id, job.title)}
+                    className={isSaved ? 'text-indigo-400 border-indigo-500/40 bg-indigo-500/15' : ''}
                   >
-                    <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-indigo-400' : ''}`} />
-                  </button>
+                    <Bookmark className={`h-4 w-4 mr-1.5 ${isSaved ? 'fill-indigo-400' : ''}`} />
+                    <span>{isSaved ? 'Saved' : 'Save'}</span>
+                  </Button>
 
                   {job.apply_url && (
-                    <a
-                      href={job.apply_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 shadow-sm shadow-indigo-600/30 transition-colors"
-                    >
-                      <span>Apply</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
+                    <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" rightIcon={<ExternalLink className="h-3.5 w-3.5" />}>
+                        Apply
+                      </Button>
                     </a>
                   )}
                 </div>
-              </div>
+              </Card>
             )
           })}
         </div>
@@ -380,32 +406,34 @@ export const JobsPage: React.FC = () => {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-800 pt-6">
+        <Card className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-400">
-            Showing Page <span className="font-semibold text-white">{page}</span> of{' '}
-            <span className="font-semibold text-white">{totalPages}</span> ({totalJobs} total jobs)
+            Showing Page <span className="font-bold text-white">{page}</span> of{' '}
+            <span className="font-bold text-white">{totalPages}</span> ({totalJobs} total positions)
           </p>
 
           <div className="flex items-center space-x-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="inline-flex items-center space-x-1 rounded-lg border border-slate-700 bg-slate-850 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              leftIcon={<ChevronLeft className="h-4 w-4" />}
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span>Previous</span>
-            </button>
+              Previous
+            </Button>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="inline-flex items-center space-x-1 rounded-lg border border-slate-700 bg-slate-850 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              rightIcon={<ChevronRight className="h-4 w-4" />}
             >
-              <span>Next</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
+              Next
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   )

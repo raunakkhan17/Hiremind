@@ -1,126 +1,83 @@
 # HireMind
 
-Full-stack hiring intelligence platform starter featuring **FastAPI**, **SQLite (via SQLAlchemy)**, **JWT Authentication**, **Automated CSV Job Seeding**, **Candidate-Job Match Scoring Engine**, **React**, **TypeScript**, **Vite**, **Tailwind CSS**, **React Router**, and **Lucide Icons**.
+Full-stack hiring intelligence platform featuring **FastAPI**, **SQLite (via SQLAlchemy)**, **JWT Authentication**, **Automated CSV Job Seeding**, **Candidate-Job Match Scoring Engine**, **React**, **TypeScript**, **Vite**, **Professional SaaS Design System**, **Tailwind CSS**, **React Router**, and **Lucide Icons**.
 
 ---
 
-## Candidate Match Engine (`backend/app/matcher.py` & `backend/matcher.py`)
+## Frontend Architecture
 
-A pure functional matching engine that calculates compatibility between a candidate profile and a job listing.
+### 1. Split-Layout Authentication Pages
+- **Routes:** `/login` and `/register`
+- **Left Panel (Gradient Branding):**
+  - High-impact SaaS visual panel with deep indigo/violet ambient gradients and blur orbs.
+  - Value propositions: 60% skill coverage + 20% experience fit + 20% preference fit matching engine.
+  - Real-time match score preview card with skills checklist.
+- **Right Panel (Interactive Forms):**
+  - **Inline Validation:** Validates email regex, min-length password, and required skills on change & blur.
+  - **Loading States:** Button spinner, disabled inputs during network submission.
+  - **Toast Notifications:** Automatic feedback for validation warnings, error toasts on failure, and welcome toasts on success.
+  - Seamless navigation links between `/login` and `/register`.
 
-### Formula
+### 2. Centralized API Service Layer (`frontend/src/services/api.ts`)
+- Configured base URL (`VITE_API_URL || 'http://localhost:8000'`).
+- Automatically intercepts and injects `Authorization: Bearer <token>` from `localStorage`.
+- Automatically clears expired tokens on `401 Unauthorized` responses.
+- Structured endpoints:
+  - `api.auth.login(credentials)`
+  - `api.auth.register(payload)`
+  - `api.auth.getMe()`
+  - `api.jobs.list(params)`
+  - `api.jobs.getById(id)`
+  - `api.jobs.save(id)`
+  - `api.jobs.unsave(id)`
+  - `api.jobs.getSaved()`
+  - `api.jobs.getRecommendations(params)`
+  - `api.health.check()`
+
+### 3. Protected Routes (`frontend/src/components/ProtectedRoute.tsx`)
+- Guard component that verifies user authentication status before granting access.
+- Redirects unauthenticated visitors to `/login`, storing the originating route in `location.state.from` for post-login return.
+- **Protected Pages:** `/saved` (`SavedJobsPage.tsx` for shortlisting opportunities).
+
+### 4. Design System & Components (`frontend/src/components/ui/`)
+- **Theme:** Indigo primary (`brand`), Slate neutrals, Inter typography, and `rounded-xl` geometry.
+- **Components:** `Button`, `Input`, `Card`, `Badge`, `Skeleton`, `Modal`, `Toast`, `EmptyState`.
+- **Navbar:** Desktop navigation, theme toggle (Dark/Light mode with `localStorage` persistence), responsive mobile drawer, and user profile avatar menu.
+
+---
+
+## Candidate Match Engine (`backend/app/matcher.py`)
+
+Pure functional scoring formula:
 $$\text{score} = 0.6 \times \text{skill\_coverage} + 0.2 \times \text{experience\_fit} + 0.2 \times \text{preference\_fit}$$
 
-- **`skill_coverage`** ($0.0 - 1.0$):
-  - Normalizes candidate and job skills to lowercase and strips whitespace.
-  - Matches candidate skills against job requirements:
-    $$\text{skill\_coverage} = \frac{|\text{matched\_skills}|}{|\text{job\_skills}|}$$
-- **`experience_fit`** ($0.0 - 1.0$):
-  - Maps seniority levels (`Entry`, `Mid`, `Senior`, `Lead`, etc.) to numeric ranks.
-  - Awards $1.0$ for exact matches, $0.9$ for higher qualification, and penalizes seniority shortfalls.
-- **`preference_fit`** ($0.0 - 1.0$):
-  - Evaluates work mode compatibility (`Remote`, `Hybrid`, `On-site`) and geographic location.
-  - Fully compatible ($1.0$) for remote roles.
-
-### Output
-The function returns a dictionary:
-```json
-{
-  "match_score": 85.0,
-  "skill_coverage": 0.75,
-  "experience_fit": 1.0,
-  "preference_fit": 1.0,
-  "matched_skills": ["python", "fastapi", "docker"],
-  "missing_skills": ["kubernetes"],
-  "reasons": [
-    "75% skills match: matched 3/4 (python, fastapi, docker)",
-    "Missing skills: kubernetes",
-    "Exact experience level match (Senior)",
-    "Remote position fits candidate preference"
-  ]
-}
-```
-
----
-
-## API Endpoints
-
-### 1. Match Recommendations (`GET /recommendations`)
-Returns job listings ranked in descending order of compatibility for the authenticated candidate:
-- **Authentication:** Required (`Authorization: Bearer <token>`)
-- **Query Parameters:** `limit` (default: 10), `min_score` (default: 0.0)
-- **Example Request:**
-  ```bash
-  curl -X GET "http://localhost:8000/recommendations?limit=5" \
-    -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
-  ```
-
-### 2. Job Catalog (`GET /jobs`)
-- **Path:** `/jobs`
-- **Query Parameters:** `q`, `location`, `work_mode`, `experience_level`, `page`, `limit`
-- **Match Score Integration:** When called with an `Authorization: Bearer <token>` header belonging to a user with a profile, each returned job automatically includes `match_score`, `matched_skills`, `missing_skills`, and `reasons`. When unauthenticated, these fields are `null`.
-- **Example Request:**
-  ```bash
-  curl "http://localhost:8000/jobs?q=python&work_mode=Remote&page=1&limit=5" \
-    -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
-  ```
-
-### 3. Job Details (`GET /jobs/{id}`)
-- Returns specific job. If user is authenticated with a profile, includes match score and breakdown.
-
-### 4. Saved Jobs
-- `POST /jobs/{id}/save`: Bookmark a job for the logged-in user.
-- `DELETE /jobs/{id}/save`: Remove a bookmarked job.
-- `GET /saved`: Retrieve all bookmarked jobs for the logged-in user.
-
-### 5. Authentication
-- `POST /auth/register`: Create user with profile & skills, returns JWT token.
-- `POST /auth/login`: Authenticate and receive JWT token.
-- `GET /me`: Get current user, profile details, and skills.
-
----
-
-## Running Automated Tests
-
-Pytest test suite is located at `backend/tests/test_matcher.py` covering:
-- Exact 100% matches
-- Partial skill matches and case-insensitive normalization
-- Zero-skill matches
-- Seniority/experience level differences
-- Work mode & location preference scoring
-- Edge cases (empty skills, missing preferences)
-
-Run tests with:
-```bash
-cd backend
-pytest tests/test_matcher.py -v
-```
+- **`skill_coverage`** ($0.0 - 1.0$): Case-insensitive normalized set matching.
+- **`experience_fit`** ($0.0 - 1.0$): Seniority comparison (`Entry`, `Mid`, `Senior`, `Lead`).
+- **`preference_fit`** ($0.0 - 1.0$): Work mode (`Remote`, `Hybrid`, `On-site`) and location alignment.
+- **Output:** `match_score` ($0-100$), `matched_skills`, `missing_skills`, and explanatory `reasons`.
 
 ---
 
 ## How to Run
 
-### Backend
+### Backend (FastAPI + SQLite)
 ```bash
 cd backend
-
-# Setup environment & virtual environment
 python -m venv venv
-.\venv\Scripts\Activate.ps1    # On Windows PowerShell
-# source venv/bin/activate     # On macOS/Linux
-
+.\venv\Scripts\Activate.ps1    # On Windows PowerShell (or: source venv/bin/activate on Unix)
 cp .env.example .env
 pip install -r requirements.txt
-
-# Start FastAPI server (seeds jobs from CSV automatically on first startup)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend
+### Frontend (React + Vite)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Visit [http://localhost:5173/jobs](http://localhost:5173/jobs) to test the live job search, filtering, pagination, match scoring, and bookmarking.
+- **Frontend App:** [http://localhost:5173](http://localhost:5173)
+- **Login Page:** [http://localhost:5173/login](http://localhost:5173/login)
+- **Register Page:** [http://localhost:5173/register](http://localhost:5173/register)
+- **Protected Saved Jobs:** [http://localhost:5173/saved](http://localhost:5173/saved)
